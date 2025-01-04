@@ -4,12 +4,13 @@ import { StoredData, Task, DayData } from './types';
 const STORAGE_KEY = '@75hard_data';
 
 let currentDefaultTasks: Task[] = [
-  { id: 1, title: 'Follow a diet', completed: false },
-  { id: 2, title: 'Two 45-minute workouts', completed: false },
-  { id: 3, title: 'No alcohol', completed: false },
-  { id: 4, title: 'Drink 1 gallon of water', completed: false },
-  { id: 5, title: 'Read 10 pages of a book', completed: false },
-  { id: 6, title: 'Take a progress picture', completed: false },
+  { id: 1, title: 'Strength-training workout', completed: false, isCore: true },
+  { id: 2, title: 'Outdoor 45-minute workout', completed: false, isCore: true },
+  { id: 3, title: 'Read 10+ pages of a book', completed: false, isCore: true },
+  { id: 4, title: 'Drink 1 gallon of water', completed: false, isCore: true },
+  { id: 5, title: 'Follow a diet', completed: false, isCore: true },
+  { id: 6, title: 'No alcohol', completed: false, isCore: true },
+  { id: 7, title: 'Take a progress picture', completed: false, isCore: true },
 ];
 
 export const getDefaultTasks = () => [...currentDefaultTasks];

@@ -2,6 +2,7 @@ export interface Task {
     id: number;
     title: string;
     completed: boolean;
+    isCore?: boolean;
 }
 
 export interface DayData {
