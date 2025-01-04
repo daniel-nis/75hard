@@ -78,13 +78,13 @@ export const TaskRow: React.FC<TaskRowProps> = ({ task, onToggle, onDelete, onEd
           style={styles.actionButton}
           onPress={() => setIsEditing(true)}
         >
-          <Pencil size={14} color="#000" strokeWidth={2} />
+          <Pencil size={14} color="#ddd5ca" strokeWidth={2} />
         </Pressable>
         <Pressable 
           style={[styles.actionButton, styles.deleteButton]}
           onPress={() => onDelete(task.id)}
         >
-          <Trash2 size={14} color="#ddd5ca" strokeWidth={2} />
+          <Trash2 size={14} color="#000" strokeWidth={2} />
         </Pressable>
       </View>
     </View>

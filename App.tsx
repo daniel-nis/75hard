@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, Alert, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, Pressable, Alert, SafeAreaView, ScrollView, Platform } from 'react-native';
 import { Plus } from 'lucide-react';
 import { TaskRow } from './components/TaskRow';
 import { ProgressGrid } from './components/ProgressGrid';
 import { DayControls } from './components/DayControl';
 import { styles } from './styles';
 import { Task } from './types';
-import { getDefaultTasks, updateDefaultTasks, saveData, loadData, clearAllData } from './storage';
+import { getDefaultTasks, updateDefaultTasks, saveData, loadData, clearAllData, initializeData } from './storage';
 import { isSameDay, calculateDayNumber } from './dateHelpers';
 
 const App = () => {
@@ -23,18 +23,27 @@ const App = () => {
     const loadSavedData = async () => {
       const saved = await loadData();
       if (saved) {
+        // If we have saved data, load it
         setStartDate(new Date(saved.startDate));
         setProgress(saved.days.map(day => day.completed));
         const calculatedDay = calculateDayNumber(new Date(saved.startDate));
-        setCurrentDay(calculatedDay);
+        const effectiveDay = Math.min(calculatedDay, 75);
+        setCurrentDay(effectiveDay);
         
-        const today = saved.days[calculatedDay - 1];
+        const today = saved.days[effectiveDay - 1];
         if (today) {
           setTasks(today.tasks);
           updateDefaultTasks(today.tasks.map(task => ({ ...task, completed: false })));
         }
       } else {
-        setStartDate(new Date());
+        // If no saved data, initialize new data
+        const newStartDate = new Date();
+        const initialData = await initializeData(newStartDate);
+        
+        setStartDate(newStartDate);
+        setCurrentDay(1);
+        setProgress(initialData.days.map(day => day.completed));
+        setTasks(initialData.days[0].tasks);
       }
     };
     
@@ -54,16 +63,25 @@ const App = () => {
           const previousDayCompleted = tasks.every(task => task.completed);
           
           if (!previousDayCompleted) {
-            Alert.alert(
-              "Challenge Failed",
-              "You didn't complete all tasks yesterday. The challenge will restart.",
-              [
-                {
-                  text: "Restart Challenge",
-                  onPress: () => handleRestartChallenge()
-                }
-              ]
-            );
+            if (Platform.OS === 'web') {
+              const confirmed = window.confirm(
+                "You didn't complete all tasks yesterday. The challenge will restart."
+              );
+              if (confirmed) {
+                handleRestartChallenge();
+              }
+            } else {
+              Alert.alert(
+                "Challenge Failed",
+                "You didn't complete all tasks yesterday. The challenge will restart.",
+                [
+                  {
+                    text: "Restart Challenge",
+                    onPress: () => handleRestartChallenge()
+                  }
+                ]
+              );
+            }
           } else {
             setCurrentDay(newDayNumber);
             setTasks(getDefaultTasks().map(task => ({ ...task, completed: false })));
@@ -248,10 +266,14 @@ const App = () => {
       const allTasksCompleted = tasks.every(task => task.completed);
       
       if (!allTasksCompleted) {
-        Alert.alert(
-          "Incomplete Tasks",
-          "You must complete all tasks before moving to the next day."
-        );
+        if (Platform.OS === 'web') {
+          alert("You must complete all tasks before moving to the next day.");
+        } else {
+          Alert.alert(
+            "Incomplete Tasks",
+            "You must complete all tasks before moving to the next day."
+          );
+        }
         return;
       }
 
@@ -275,39 +297,57 @@ const App = () => {
     }
   };
 
+  const performReset = async () => {
+    await clearAllData();
+    
+    // Initialize new data structure with default tasks
+    const newStartDate = new Date();
+    const initialData = await initializeData(newStartDate);
+    
+    // Reset to initial default tasks
+    updateDefaultTasks([
+      { id: 1, title: 'Follow a diet', completed: false },
+      { id: 2, title: 'Two 45-minute workouts', completed: false },
+      { id: 3, title: 'No alcohol', completed: false },
+      { id: 4, title: 'Drink 1 gallon of water', completed: false },
+      { id: 5, title: 'Read 10 pages of a book', completed: false },
+      { id: 6, title: 'Take a progress picture', completed: false },
+    ]);
+
+    // Update state with the initialized data
+    setTasks(initialData.days[0].tasks);
+    setStartDate(newStartDate);
+    setCurrentDay(1);
+    setProgress(initialData.days.map(day => day.completed));
+    setIsAddingTask(false);
+    setNewTaskTitle('');
+  };
+
   const handleFullReset = () => {
-    Alert.alert(
-      "Reset Challenge",
-      "This will reset all progress and start the challenge over. Are you sure?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Reset",
-          style: "destructive",
-          onPress: async () => {
-            await clearAllData();
-            // Reset to initial default tasks
-            updateDefaultTasks([
-              { id: 1, title: 'Follow a diet', completed: false },
-              { id: 2, title: 'Two 45-minute workouts', completed: false },
-              { id: 3, title: 'No alcohol', completed: false },
-              { id: 4, title: 'Drink 1 gallon of water', completed: false },
-              { id: 5, title: 'Read 10 pages of a book', completed: false },
-              { id: 6, title: 'Take a progress picture', completed: false },
-            ]);
-            setTasks(getDefaultTasks());
-            setStartDate(new Date());
-            setCurrentDay(1);
-            setProgress(Array(75).fill(false));
-            setIsAddingTask(false);
-            setNewTaskTitle('');
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(
+        "This will reset all progress and start the challenge over. Are you sure?"
+      );
+      if (confirmed) {
+        performReset();
+      }
+    } else {
+      Alert.alert(
+        "Reset Challenge",
+        "This will reset all progress and start the challenge over. Are you sure?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel"
+          },
+          {
+            text: "Reset",
+            style: "destructive",
+            onPress: performReset
           }
-        }
-      ]
-    );
+        ]
+      );
+    }
   };
 
   return (
@@ -374,7 +414,7 @@ const App = () => {
               style={styles.addButton}
               onPress={addTask}
             >
-              <Plus size={20} color="#ddd5ca" strokeWidth={2.5} />
+              <Plus size={20} color="#000" strokeWidth={2.5} />
             </Pressable>
           </View>
 

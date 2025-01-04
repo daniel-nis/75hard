@@ -21,7 +21,7 @@ export const DayControls: React.FC<DayControlsProps> = ({
         onPress={onPreviousDay}
         disabled={currentDay === 1}
       >
-        <ChevronLeft size={20} color="#ddd5ca" />
+        <ChevronLeft size={20} color="#000" />
       </Pressable>
       <Text style={styles.title}>Day {currentDay}</Text>
       <Pressable 
@@ -29,7 +29,7 @@ export const DayControls: React.FC<DayControlsProps> = ({
         onPress={onNextDay}
         disabled={currentDay === 75}
       >
-        <ChevronRight size={20} color="#ddd5ca" />
+        <ChevronRight size={20} color="#000" />
       </Pressable>
     </View>
   );
