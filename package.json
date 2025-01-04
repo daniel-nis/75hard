@@ -6,7 +6,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build": "expo export:web",
+    "serve": "serve dist"
   },
   "dependencies": {
     "@expo/metro-runtime": "~4.0.0",
@@ -24,6 +26,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~18.3.12",
+    "serve": "^14.2.4",
     "typescript": "^5.3.3"
   },
   "private": true
